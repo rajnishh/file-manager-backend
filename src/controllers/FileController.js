@@ -1,5 +1,6 @@
-import { uploadFile, getFileById, shareFile, trackFileView } from '../services/FileService.js';
-
+import { uploadFile, getFileById, shareFile, trackFileView, getAllFilesList, getFullSharedLinkURL } from '../services/FileService.js';
+import { getUserIdByUsername } from '../repositories/UserRepository.js';
+import logger from '../config/logger.js';
 // Helper function to check if the error is an instance of Error
 const isError = (error) => {
   return error instanceof Error;
@@ -30,11 +31,28 @@ export const uploadFileController = async (req, res) => {
   }
 };
 
-export const listFilesController = async (req, res) => {
+export const getAllFilesController = async (req, res) => {
   try {
-    const files = await File.find().sort({ createdAt: -1 }); // Sort by creation date, latest first
-    res.status(200).json(files);
+
+    const username = req.params.username;
+    const ownerId = await getUserIdByUsername(username);
+
+    if (!ownerId) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const files = await getAllFilesList(ownerId);
+    // Update each file's sharedLink with the full URL only if it exists
+    const filesWithFullURLs = files.map(file => {
+      const fileObject = file.toObject();
+      if (fileObject.sharedLink) {
+        fileObject.sharedLink = getFullSharedLinkURL(fileObject.sharedLink);
+      }
+      return fileObject;
+    });
+    res.status(200).json(filesWithFullURLs);
   } catch (error) {
+    console.error('Error fetching files:', error);
     res.status(500).json({ error: 'Failed to retrieve files' });
   }
 };
@@ -63,8 +81,8 @@ export const shareFileController = async (req, res) => {
 
 export const trackFileViewController = async (req, res) => {
   try {
-    await trackFileView(req.params.sharedLink);
-    res.status(200).json({ message: 'View tracked' });
+    const file = await trackFileView(req.params.sharedLink);
+    res.status(200).json(file);
   } catch (error) {
     res.status(400).json({ error: isError(error) ? error.message : 'Unknown error' });
   }

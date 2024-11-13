@@ -1,4 +1,4 @@
-import { saveFile, getFileById as getFileByIdRepo, updateViewCount } from '../repositories/FileRepository.js';
+import { saveFile, getFileById as getFileByIdRepo, updateViewCount, getAllFiles } from '../repositories/FileRepository.js';
 import crypto from 'crypto';
 
 // Upload a file and save it to the database
@@ -36,10 +36,22 @@ export const shareFile = async (id) => {
       file.sharedLink = generateUniqueLink(id); // Generate only if it doesn't exist
       await file.save();
     }
-    return `${process.env.BASE_URL}/api/files/view/${file.sharedLink}`; // Return the full URL
+    return getFullSharedLinkURL(file.sharedLink);
   }
   throw new Error('File not found');
 };
+
+export const getFullSharedLinkURL = (sharedLinkId) => {
+  return `${process.env.BASE_URL}/api/files/view/${sharedLinkId}`; // Return the full URL
+}
+
+export const getAllFilesList = async (ownerId) => {
+  const files = await getAllFiles(ownerId);
+  if(!files) {
+    throw new Error('No file(s) found')
+  }
+  return files;
+}
 
 // Retrieve a file by ID
 export const getFileById = async (id) => {
@@ -58,4 +70,5 @@ export const trackFileView = async (sharedLink) => {
     throw new Error('File not found');
   }
   await updateViewCount(file._id);
+  return file;
 };

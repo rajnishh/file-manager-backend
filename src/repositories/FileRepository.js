@@ -6,6 +6,12 @@ export const saveFile = async (fileData) => {
   return file.save();
 };
 
+// Retrieve all files sorted by the latest first
+export const getAllFiles = async (ownerId) => {
+  return File.find({ ownerId }).sort({ createdAt: 1 });
+};
+
+
 // Retrieve a file by ID or shared link
 export const getFileById = async (query) => {
   // Check if query is an object (for sharedLink) or string (for _id)

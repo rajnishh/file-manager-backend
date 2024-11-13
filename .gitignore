@@ -1,0 +1,5 @@
+
+*.log
+src/.DS_Store
+src/config/.DS_Store
+src/controllers/.DS_Store

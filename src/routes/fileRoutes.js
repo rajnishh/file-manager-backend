@@ -7,7 +7,7 @@ import {
   shareFileController,
   trackFileViewController,
   getFileStatistics,
-  listFilesController,
+  getAllFilesController,
 } from '../controllers/FileController.js';
 
 const router = Router();
@@ -71,7 +71,9 @@ router.get('/view/:sharedLink', trackFileViewController);
 router.get('/:id/statistics', authenticate, getFileStatistics);
 
 // Route to list all files sorted by latest (protected route)
-router.get('/', authenticate, listFilesController);
+router.get('/:username/all', authenticate, getAllFilesController);
+
+//router.get('/:id/content', authenticate, getFileContentController);
 
 
 export default router;
